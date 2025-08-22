@@ -79,98 +79,121 @@ class ReportController extends Controller
         ]);
     }
     public function notes(Request $request)
-    {
-        $projectId = $request->integer('project_id');
-        $from      = $request->date('from');
-        $to        = $request->date('to');
+{
+    $projectId     = $request->integer('project_id');
+    $accountCodeId = $request->integer('account_code_id'); // from Select2
+    $q             = trim((string) $request->input('q', '')); // optional free-text
+    $from          = $request->date('from');
+    $to            = $request->date('to');
 
-        // Aggregate per account_code per month, with its type (nullable -> 'Uncategorized')
-        $rows = Expense::query()
-            ->leftJoin('account_codes', 'account_codes.id', '=', 'expenses.account_code_id')
-            ->leftJoin('account_code_types', 'account_code_types.id', '=', 'account_codes.account_code_type_id')
-            ->when($projectId, fn($q) => $q->where('expenses.project_id', $projectId))
-            ->when($from, fn($q) => $q->whereDate('expenses.expense_date', '>=', $from))
-            ->when($to, fn($q) => $q->whereDate('expenses.expense_date', '<=', $to))
-            ->selectRaw("
-                expenses.account_code_id,
-                COALESCE(account_codes.code, '—') as ac_code,
-                COALESCE(account_codes.name, '—') as ac_name,
-                COALESCE(account_code_types.name, 'Uncategorized') as type_name,
-                DATE_FORMAT(expenses.expense_date, '%Y-%m-01') as ym,
-                SUM(expenses.amount) as total
-            ")
-            ->groupBy('expenses.account_code_id','ac_code','ac_name','type_name','ym')
-            ->orderBy('type_name')->orderBy('ac_code')->orderBy('ym')
-            ->get();
+    // Aggregate per account_code per month, with type (nullable -> 'Uncategorized')
+    $base = Expense::query()
+        ->leftJoin('account_codes', 'account_codes.id', '=', 'expenses.account_code_id')
+        ->leftJoin('account_code_types', 'account_code_types.id', '=', 'account_codes.account_code_type_id')
+        ->when($projectId, fn($q2) => $q2->where('expenses.project_id', $projectId))
+        ->when($from, fn($q2) => $q2->whereDate('expenses.expense_date', '>=', $from))
+        ->when($to, fn($q2) => $q2->whereDate('expenses.expense_date', '<=', $to))
+        // NEW: Select2 filter by specific account
+        ->when($accountCodeId, fn($q2) => $q2->where('expenses.account_code_id', $accountCodeId))
+        // NEW: free-text fallback filter (code or name)
+        ->when($q !== '', function ($q2) use ($q) {
+            $q2->where(function ($w) use ($q) {
+                $w->where('account_codes.code', 'like', "%{$q}%")
+                  ->orWhere('account_codes.name', 'like', "%{$q}%");
+            });
+        });
 
-        // Build month range
-        if ($rows->isNotEmpty()) {
-            $minYm = $from ? Carbon::parse($from)->startOfMonth() : Carbon::parse($rows->min('ym'));
-            $maxYm = $to   ? Carbon::parse($to)->startOfMonth()   : Carbon::parse($rows->max('ym'));
-        } else {
-            $minYm = $maxYm = Carbon::now()->startOfMonth();
-        }
-        $months = collect(CarbonPeriod::create($minYm, '1 month', $maxYm))
-            ->map(fn(Carbon $c) => $c->format('Y-m-01'));
-        $monthLabels = $months->mapWithKeys(fn($ym) => [$ym => Carbon::parse($ym)->format('M y')]);
+    $rows = (clone $base)
+        ->selectRaw("
+            expenses.account_code_id,
+            COALESCE(account_codes.code, '—') as ac_code,
+            COALESCE(account_codes.name, '—') as ac_name,
+            COALESCE(account_code_types.name, 'Uncategorized') as type_name,
+            DATE_FORMAT(expenses.expense_date, '%Y-%m-01') as ym,
+            SUM(expenses.amount) as total
+        ")
+        ->groupBy('expenses.account_code_id','ac_code','ac_name','type_name','ym')
+        ->orderBy('type_name')->orderBy('ac_code')->orderBy('ym')
+        ->get();
 
-        // Reshape into: groups[type_name] = [ rows... ], and compute per-type subtotals
-        $byType = [];
-        $totalsPerMonth = array_fill_keys($months->all(), 0.0);
-        $grandTotal = 0.0;
-
-        foreach ($rows->groupBy('type_name') as $typeName => $groupRows) {
-            // index code-month totals
-            $codeMonth = [];
-            foreach ($groupRows as $r) {
-                $codeMonth[$r->account_code_id]['code'] = $r->ac_code;
-                $codeMonth[$r->account_code_id]['name'] = $r->ac_name;
-                $codeMonth[$r->account_code_id]['months'][$r->ym] = (float) $r->total;
-            }
-
-            // build rows and type subtotal
-            $typeRows = [];
-            $typeTotals = array_fill_keys($months->all(), 0.0);
-            $typeGrand = 0.0;
-
-            foreach ($codeMonth as $acId => $info) {
-                $row = [
-                    'code' => $info['code'],
-                    'name' => $info['name'],
-                    'months' => [],
-                    'row_total' => 0.0,
-                ];
-                foreach ($months as $ym) {
-                    $val = (float) ($info['months'][$ym] ?? 0.0);
-                    $row['months'][$ym] = $val;
-                    $row['row_total'] += $val;
-                    $typeTotals[$ym] += $val;
-                    $totalsPerMonth[$ym] += $val;
-                }
-                $typeGrand += $row['row_total'];
-                $grandTotal += $row['row_total'];
-                $typeRows[] = $row;
-            }
-
-            $byType[$typeName] = [
-                'rows' => $typeRows,
-                'totals' => $typeTotals,
-                'type_total' => $typeGrand,
-            ];
-        }
-
-        // For filters
-        $projects = Project::orderBy('name')->get(['id','name']);
-
-        return view('reports.notes', [
-            'groups'         => $byType,      // NEW: grouped result
-            'monthKeys'      => $months,
-            'monthLabels'    => $monthLabels,
-            'totalsPerMonth' => $totalsPerMonth,
-            'grandTotal'     => $grandTotal,
-            'projects'       => $projects,
-        ]);
+    // Build month range from filtered data (or today if empty)
+    if ($rows->isNotEmpty()) {
+        $minYm = $from ? Carbon::parse($from)->startOfMonth() : Carbon::parse($rows->min('ym'));
+        $maxYm = $to   ? Carbon::parse($to)->startOfMonth()   : Carbon::parse($rows->max('ym'));
+    } else {
+        $minYm = $maxYm = Carbon::now()->startOfMonth();
     }
+
+    $months = collect(CarbonPeriod::create($minYm, '1 month', $maxYm))
+        ->map(fn(Carbon $c) => $c->format('Y-m-01'));
+    $monthLabels = $months->mapWithKeys(fn($ym) => [$ym => Carbon::parse($ym)->format('M y')]);
+
+    // Reshape into groups and compute totals
+    $byType = [];
+    $totalsPerMonth = array_fill_keys($months->all(), 0.0);
+    $grandTotal = 0.0;
+
+    foreach ($rows->groupBy('type_name') as $typeName => $groupRows) {
+        $codeMonth = [];
+        foreach ($groupRows as $r) {
+            $codeMonth[$r->account_code_id]['code'] = $r->ac_code;
+            $codeMonth[$r->account_code_id]['name'] = $r->ac_name;
+            $codeMonth[$r->account_code_id]['months'][$r->ym] = (float) $r->total;
+        }
+
+        $typeRows = [];
+        $typeTotals = array_fill_keys($months->all(), 0.0);
+        $typeGrand = 0.0;
+
+        foreach ($codeMonth as $acId => $info) {
+            $row = [
+                'code' => $info['code'],
+                'name' => $info['name'],
+                'months' => [],
+                'row_total' => 0.0,
+            ];
+            foreach ($months as $ym) {
+                $val = (float) ($info['months'][$ym] ?? 0.0);
+                $row['months'][$ym] = $val;
+                $row['row_total'] += $val;
+                $typeTotals[$ym] += $val;
+                $totalsPerMonth[$ym] += $val;
+            }
+            $typeGrand += $row['row_total'];
+            $grandTotal += $row['row_total'];
+            $typeRows[] = $row;
+        }
+
+        $byType[$typeName] = [
+            'rows' => $typeRows,
+            'totals' => $typeTotals,
+            'type_total' => $typeGrand,
+        ];
+    }
+
+    // For filters (Select2 options)
+    $projects = Project::orderBy('name')->get(['id','name']);
+    $accountCodes = AccountCode::orderBy('code')->get(['id','code','name']);
+
+    return view('reports.notes', [
+        'groups'         => $byType,
+        'monthKeys'      => $months,
+        'monthLabels'    => $monthLabels,
+        'totalsPerMonth' => $totalsPerMonth,
+        'grandTotal'     => $grandTotal,
+        'projects'       => $projects,
+        'accountCodes'   => $accountCodes,
+
+        // pass current filters so the view can keep the selection
+        'filters' => [
+            'project_id'      => $projectId,
+            'account_code_id' => $accountCodeId,
+            'q'               => $q,
+            'from'            => $from?->format('Y-m-d'),
+            'to'              => $to?->format('Y-m-d'),
+        ],
+    ]);
+}
 
 
     public function pnl(Request $request)

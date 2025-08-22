@@ -3,7 +3,6 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\ExpenseController;
 use App\Http\Controllers\AccountCodeController;
-use App\Http\Controllers\ExpenseCodeController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ProjectTypeController;

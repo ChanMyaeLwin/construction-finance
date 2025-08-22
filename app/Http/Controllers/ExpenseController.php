@@ -28,11 +28,16 @@ class ExpenseController extends Controller
         if ($from)          $query->whereDate('expense_date', '>=', $from);
         if ($to)            $query->whereDate('expense_date', '<=', $to);
 
-        $expenses    = $query->paginate(20)->withQueryString();
-        $accountCodes= AccountCode::orderBy('code')->get();
-        $projects    = Project::orderBy('name')->get(['id','name']);  
+        // clone query for total before pagination
+        $totalExpense = (clone $query)->sum('amount');
 
-        return view('expenses.index', compact('expenses', 'accountCodes', 'projects'));
+        $expenses     = $query->paginate(20)->withQueryString();
+        $accountCodes = AccountCode::where('account_code_type_id', '!=', '12')
+            ->orderBy('code')
+            ->get();
+        $projects = Project::orderBy('name')->get(['id','name']);  
+
+        return view('expenses.index', compact('expenses', 'accountCodes', 'projects', 'totalExpense'));
     }
 
     // Add expense under a project

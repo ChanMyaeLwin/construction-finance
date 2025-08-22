@@ -16,6 +16,19 @@
                     @endforeach
                 </select>
             </div>
+            <div class="sm:col-span-2">
+        <label class="block text-sm text-gray-600">Account Code</label>
+        <select name="account_code_id"
+                class="mt-1 w-full rounded-xl border-gray-300 js-select2"
+                data-placeholder="All Accounts">
+            <option value=""></option>
+            @foreach($accountCodes as $ac)
+                <option value="{{ $ac->id }}" @selected((string)request('account_code_id') === (string)$ac->id)>
+                    {{ $ac->code }} — {{ $ac->name }}
+                </option>
+            @endforeach
+        </select>
+    </div>
             <div>
                 <label class="block text-sm text-gray-600">From</label>
                 <input type="date" name="from" value="{{ request('from') }}" class="mt-1 w-full rounded-xl border-gray-300" />
@@ -168,4 +181,15 @@
             @endif
         </div>
     </div>
+    <script>
+document.addEventListener('DOMContentLoaded', function () {
+    $('.js-select2').select2({
+        placeholder: function(){
+            return $(this).data('placeholder') || 'Select an option';
+        },
+        allowClear: true,
+        width: '100%',
+    });
+});
+</script>
 </x-app-layout>

@@ -19,6 +19,11 @@ class Project extends Model
         'progress_percent' => 'integer',
     ];
 
+    public function incomes(): HasMany
+    {
+        return $this->hasMany(Income::class);
+    }
+
     public function expenses(): HasMany
     {
         return $this->hasMany(Expense::class);

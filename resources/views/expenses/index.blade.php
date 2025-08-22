@@ -34,6 +34,10 @@
             </div>
         </form>
 
+        <div class="mb-4">
+            <strong>Total Expense:</strong> {{ number_format($totalExpense, 2) }}
+        </div>
+
         <div class="overflow-x-auto rounded-2xl border bg-white">
             <table class="w-full text-sm">
                 <thead class="text-left text-gray-500">
@@ -50,7 +54,7 @@
                     <tr class="border-t">
                         <td class="py-2 px-3">{{ $e->expense_date->format('Y-m-d') }}</td>
                         <td class="px-3">{{ $e->project->name }}</td>
-                        <td class="px-3">{{ $e->accountCode->code }}</td>
+                        <td class="px-3">{{ $e->accountCode->code }} <br> {{ $e->accountCode->name }}</td>
                         <td class="px-3 text-right">{{ number_format($e->amount,2) }}</td>
                         <td class="px-3">{{ $e->user->name }}</td>
                     </tr>
