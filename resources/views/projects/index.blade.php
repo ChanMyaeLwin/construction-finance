@@ -21,7 +21,8 @@
                         <th class="px-3">Type</th>
                         <th class="px-3">Location</th>
                         <th class="px-3 text-right">Fixed Amount</th>
-                        <th class="px-3 text-right">Final Expense</th>
+                        <th class="px-3 text-right">Income</th>     {{-- NEW --}}
+                        <th class="px-3 text-right">Expense</th>    {{-- RENAMED --}}
                         <th class="px-3 text-right">Profit / Loss</th>
                         <th class="px-3 text-right">Complete %</th>
                         <th class="px-3 w-40 text-right">Actions</th>
@@ -30,8 +31,9 @@
                 <tbody>
                     @forelse($projects as $p)
                         @php
-                            $finalExpense = (float) $p->final_expense; // signed (AC-40001 subtracts)
-                            $profit = (float) $p->fixed_amount - $finalExpense;
+                            $income  = (float) ($p->incomes_sum_amount  ?? 0);
+                            $expense = (float) ($p->expenses_sum_amount ?? 0);
+                            $profit  = $income - $expense;
                         @endphp
                         <tr class="border-t">
                             <td class="py-2 px-3">
@@ -39,13 +41,16 @@
                                     {{ $p->name }}
                                 </a>
                                 <div class="text-xs text-gray-500">
-                                    {{ optional($p->start_date)->format('Y-m-d') }} → {{ optional($p->expected_end_date)->format('Y-m-d') ?: '—' }}
+                                    {{ optional($p->start_date)->format('Y-m-d') }} →
+                                    {{ optional($p->expected_end_date)->format('Y-m-d') ?: '—' }}
                                 </div>
                             </td>
                             <td class="px-3">{{ optional($p->projectType)->name ?? ($p->project_type ?? '—') }}</td>
                             <td class="px-3">{{ $p->location ?: '—' }}</td>
+
                             <td class="px-3 text-right">{{ number_format($p->fixed_amount, 2) }}</td>
-                            <td class="px-3 text-right">{{ number_format($finalExpense, 2) }}</td>
+                            <td class="px-3 text-right text-emerald-700">{{ number_format($income, 2) }}</td>   {{-- NEW --}}
+                            <td class="px-3 text-right">{{ number_format($expense, 2) }}</td>                   {{-- RENAMED --}}
                             <td class="px-3 text-right">
                                 <span class="font-semibold {{ $profit >= 0 ? 'text-emerald-600' : 'text-red-600' }}">
                                     {{ number_format($profit, 2) }}
@@ -70,7 +75,7 @@
                             </td>
                         </tr>
                     @empty
-                        <tr><td colspan="8" class="py-6 text-center text-gray-500">No projects yet.</td></tr>
+                        <tr><td colspan="9" class="py-6 text-center text-gray-500">No projects yet.</td></tr>
                     @endforelse
                 </tbody>
             </table>
@@ -80,8 +85,9 @@
         <div class="md:hidden space-y-3">
             @forelse($projects as $p)
                 @php
-                    $finalExpense = (float) $p->final_expense;
-                    $profit = (float) $p->fixed_amount - $finalExpense;
+                    $income  = (float) ($p->incomes_sum_amount  ?? 0);
+                    $expense = (float) ($p->expenses_sum_amount ?? 0);
+                    $profit  = $income - $expense;
                 @endphp
                 <div class="rounded-xl border bg-white p-3">
                     <div class="flex items-start justify-between gap-3">
@@ -101,18 +107,18 @@
 
                     <div class="mt-2 grid grid-cols-3 gap-2 text-sm">
                         <div class="rounded-lg bg-gray-50 p-2">
-                            <div class="text-[11px] text-gray-500">Final Expense</div>
-                            <div class="font-medium">{{ number_format($finalExpense, 2) }}</div>
+                            <div class="text-[11px] text-gray-500">Income</div>
+                            <div class="font-medium text-emerald-700">{{ number_format($income, 2) }}</div>
+                        </div>
+                        <div class="rounded-lg bg-gray-50 p-2">
+                            <div class="text-[11px] text-gray-500">Expense</div>
+                            <div class="font-medium">{{ number_format($expense, 2) }}</div>
                         </div>
                         <div class="rounded-lg bg-gray-50 p-2">
                             <div class="text-[11px] text-gray-500">Profit/Loss</div>
                             <div class="font-semibold {{ $profit >= 0 ? 'text-emerald-700' : 'text-red-700' }}">
                                 {{ number_format($profit, 2) }}
                             </div>
-                        </div>
-                        <div class="rounded-lg bg-gray-50 p-2">
-                            <div class="text-[11px] text-gray-500">Complete %</div>
-                            <div class="font-medium">{{ $p->progress_percent }}%</div>
                         </div>
                     </div>
 

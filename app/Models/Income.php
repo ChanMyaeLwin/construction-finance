@@ -39,13 +39,13 @@ class Income extends Model
     protected static function booted()
     {
         static::creating(function ($income) {
-            if ($income->accountCode && $income->accountCode->type !== 'Revenue') {
+            if ($income->accountCode && $income->accountCode->type->name !== 'Revenue') {
                 throw new \Exception('Only Revenue accounts can be stored in Incomes.');
             }
         });
 
         static::updating(function ($income) {
-            if ($income->accountCode && $income->accountCode->type !== 'Revenue') {
+            if ($income->accountCode && $income->accountCode->type->name !== 'Revenue') {
                 throw new \Exception('Only Revenue accounts can be stored in Incomes.');
             }
         });

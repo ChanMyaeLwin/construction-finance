@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Income;
 use App\Models\Expense;
 use App\Models\Project;
 use App\Models\AccountCode;
@@ -45,16 +46,31 @@ class ExpenseController extends Controller
     {
         $validated = $request->validate([
             'account_code_id' => 'required|exists:account_codes,id',
-            'expense_date' => 'required|date',
-            'amount' => 'required|numeric|min:0',
-            'description' => 'nullable|string|max:255',
+            'expense_date'    => 'required|date',
+            'amount'          => 'required|numeric|min:0',
+            'description'     => 'nullable|string|max:255',
         ]);
 
-        $validated['project_id'] = $project->id;
-        $validated['user_id'] = Auth::id();
+        $account = AccountCode::findOrFail($validated['account_code_id']);
 
-        Expense::create($validated);
-        return back()->with('success', 'Expense added.');
+        if ($account->account_code_type_id == 12) {
+            // Revenue → store in incomes table
+            Income::create([
+                'project_id'      => $project->id,
+                'account_code_id' => $account->id,
+                'user_id'         => Auth::id(),
+                'income_date'     => $validated['expense_date'],
+                'amount'          => $validated['amount'],
+                'description'     => $validated['description'] ?? null,
+            ]);
+        } else {
+            // Non-Revenue → store in expenses table
+            $validated['project_id'] = $project->id;
+            $validated['user_id']    = Auth::id();
+            Expense::create($validated);
+        }
+
+        return back()->with('success', 'Entry added.');
     }
 
     public function update(Request $request, Expense $expense)

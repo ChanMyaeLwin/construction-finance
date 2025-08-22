@@ -8,6 +8,7 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ProjectTypeController;
 use App\Http\Controllers\AccountCodeTypeController;
 use App\Http\Controllers\ProjectStepController;
+use App\Http\Controllers\IncomeController;
 
 Route::get('/', fn() => redirect()->route('dashboard'));
 Route::get('/dashboard', function () {
@@ -25,7 +26,9 @@ Route::middleware(['auth'])->group(function () {
     Route::post('projects/{project}/expenses', [ExpenseController::class, 'store'])->name('projects.expenses.store');
     Route::put('expenses/{expense}', [ExpenseController::class, 'update'])->name('expenses.update');
     Route::delete('expenses/{expense}', [ExpenseController::class, 'destroy'])->name('expenses.destroy');
-    
+
+    Route::resource('incomes', IncomeController::class)->only(['update','destroy']);
+
     Route::resource('account-code-types', AccountCodeTypeController::class)->except(['show']);
     Route::resource('account-codes', AccountCodeController::class);
     

@@ -13,23 +13,11 @@ class ProjectController extends Controller
     public function index()
     {
         $projects = \App\Models\Project::query()
-            ->select('projects.*')
-            ->selectSub(function ($q) {
-                $q->from('expenses')
-                ->leftJoin('account_codes','account_codes.id','=','expenses.account_code_id')
-                ->whereColumn('expenses.project_id','projects.id')
-                ->selectRaw("
-                    COALESCE(SUM(
-                        CASE WHEN account_codes.code = 'AC-40001'
-                            THEN -expenses.amount
-                            ELSE  expenses.amount
-                        END
-                    ), 0)
-                ");
-            }, 'final_expense')
             ->with('projectType')
-            ->latest()
-            ->paginate(12);
+            ->withSum('incomes', 'amount')   // -> incomes_sum_amount
+            ->withSum('expenses', 'amount')  // -> expenses_sum_amount
+            ->orderBy('name')
+            ->paginate(20);
 
         return view('projects.index', compact('projects'));
     }
@@ -59,10 +47,18 @@ class ProjectController extends Controller
 
     public function show(Project $project)
     {
-        $project->load(['expenses.accountCode', 'expenses.user', 'steps']);
-        $accountCodes = AccountCode::orderBy('code')->get();
-        $expenseCodes = ExpenseCode::orderBy('code')->get();
-        return view('projects.show', compact('project', 'accountCodes', 'expenseCodes'));
+        $project->load([
+            'projectType',
+            'steps',
+            'expenses.accountCode','expenses.user',
+            'incomes.accountCode','incomes.user',
+        ])->loadSum('expenses', 'amount')
+        ->loadSum('incomes', 'amount');
+
+        // For selects in the Add form:
+        $accountCodes = AccountCode::orderBy('code')->get(['id','code','name','account_code_type_id']);
+
+        return view('projects.show', compact('project','accountCodes'));
     }
 
     public function edit(Project $project)
