@@ -21,8 +21,9 @@
                         <th class="px-3">Type</th>
                         <th class="px-3">Location</th>
                         <th class="px-3 text-right">Fixed Amount</th>
-                        <th class="px-3 text-right">Income</th>     {{-- NEW --}}
-                        <th class="px-3 text-right">Expense</th>    {{-- RENAMED --}}
+                        <th class="px-3 text-right">Income</th>   
+                        <th class="px-3 text-right">Expense</th>    
+                        <th class="px-3 text-right">Remaining</th>   
                         <th class="px-3 text-right">Profit / Loss</th>
                         <th class="px-3 text-right">Complete %</th>
                         <th class="px-3 w-40 text-right">Actions</th>
@@ -31,9 +32,11 @@
                 <tbody>
                     @forelse($projects as $p)
                         @php
+                            $fixed_amount  = (float) ($p->fixed_amount  ?? 0);
                             $income  = (float) ($p->incomes_sum_amount  ?? 0);
                             $expense = (float) ($p->expenses_sum_amount ?? 0);
                             $profit  = $income - $expense;
+                            $remaining  = $fixed_amount - $income;
                         @endphp
                         <tr class="border-t">
                             <td class="py-2 px-3">
@@ -49,8 +52,13 @@
                             <td class="px-3">{{ $p->location ?: '—' }}</td>
 
                             <td class="px-3 text-right">{{ number_format($p->fixed_amount, 2) }}</td>
-                            <td class="px-3 text-right text-emerald-700">{{ number_format($income, 2) }}</td>   {{-- NEW --}}
-                            <td class="px-3 text-right">{{ number_format($expense, 2) }}</td>                   {{-- RENAMED --}}
+                            <td class="px-3 text-right text-emerald-700">{{ number_format($income, 2) }}</td>
+                            <td class="px-3 text-right">{{ number_format($expense, 2) }}</td>     
+                            <td class="px-3 text-right">
+                                <span class="font-semibold {{ $remaining >= 0 ? 'text-emerald-600' : 'text-red-600' }}">
+                                    {{ number_format($remaining, 2) }}
+                                </span>
+                            </td>  
                             <td class="px-3 text-right">
                                 <span class="font-semibold {{ $profit >= 0 ? 'text-emerald-600' : 'text-red-600' }}">
                                     {{ number_format($profit, 2) }}
@@ -85,9 +93,11 @@
         <div class="md:hidden space-y-3">
             @forelse($projects as $p)
                 @php
+                    $fixed_amount  = (float) ($p->fixed_amount  ?? 0);
                     $income  = (float) ($p->incomes_sum_amount  ?? 0);
                     $expense = (float) ($p->expenses_sum_amount ?? 0);
                     $profit  = $income - $expense;
+                    $remaining = $fixed_amount - $income;
                 @endphp
                 <div class="rounded-xl border bg-white p-3">
                     <div class="flex items-start justify-between gap-3">
@@ -105,7 +115,7 @@
                         </div>
                     </div>
 
-                    <div class="mt-2 grid grid-cols-3 gap-2 text-sm">
+                    <div class="mt-2 grid grid-cols-2 gap-2 text-sm">
                         <div class="rounded-lg bg-gray-50 p-2">
                             <div class="text-[11px] text-gray-500">Income</div>
                             <div class="font-medium text-emerald-700">{{ number_format($income, 2) }}</div>
@@ -115,6 +125,12 @@
                             <div class="font-medium">{{ number_format($expense, 2) }}</div>
                         </div>
                         <div class="rounded-lg bg-gray-50 p-2">
+                            <div class="text-[11px] text-gray-500">Remaining</div>
+                            <div class="font-semibold {{ $remaining >= 0 ? 'text-emerald-700' : 'text-red-700' }}">
+                                {{ number_format($remaining, 2) }}
+                            </div>
+                        </div>
+                          <div class="rounded-lg bg-gray-50 p-2">
                             <div class="text-[11px] text-gray-500">Profit/Loss</div>
                             <div class="font-semibold {{ $profit >= 0 ? 'text-emerald-700' : 'text-red-700' }}">
                                 {{ number_format($profit, 2) }}

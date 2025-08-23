@@ -20,6 +20,7 @@
 
             // Net = Income - Expense
             $profit = (float) $totalIncome - $totalExpense;
+            $remaining = (float) $project->fixed_amount - $totalIncome;
         @endphp
         <div class="rounded-2xl border p-4 bg-white">
             <div class="flex items-start justify-between gap-3">
@@ -39,6 +40,11 @@
                     </div>
                     <div>Expense:
                         <span class="font-semibold">{{ number_format($totalExpense,2) }}</span>
+                    </div>
+                    <div>Remaining:
+                        <span class="font-semibold {{ $remaining >= 0 ? 'text-emerald-600' : 'text-red-600' }}">
+                            {{ number_format($remaining,2) }}
+                        </span>
                     </div>
                     <div>Profit/Loss:
                         <span class="font-semibold {{ $profit >= 0 ? 'text-emerald-600' : 'text-red-600' }}">
@@ -82,7 +88,7 @@
                     <select name="account_code_id" id="account_code_id" class="select2 mt-1 w-full rounded-xl border-gray-300">
                         <option value="">Select…</option>
                         @foreach($accountCodes as $ac)
-                            <option value="{{ $ac->id }}">
+                            <option value="{{ $ac->id }}" data-type="{{ $ac->account_code_type_id }}">
                                 {{ $ac->code }} — {{ $ac->name }}
                                 @if($ac->account_code_type_id == 12)
                                     (Income)
@@ -94,6 +100,7 @@
                     </select>
                     <p class="text-[11px] text-gray-400 mt-1">Tip: AC-40001 is treated as Income (subtracts from totals).</p>
                 </div>
+               
                 <div>
                     <label class="block text-sm font-medium">Date</label>
                     <input type="date" name="expense_date" required class="mt-1 w-full rounded-xl border-gray-300" value="{{ today()->format('Y-m-d') }}"/>
@@ -103,11 +110,24 @@
                     <input type="number" step="0.01" min="0" name="amount" required class="mt-1 w-full rounded-xl border-gray-300" />
                 </div>
                 <div class="sm:col-span-6">
+                 {{-- Worker (hidden unless type=15) --}}
+                    <div id="worker_wrap" class="mt-3 hidden">
+                    <label class="block text-sm font-medium">Worker</label>
+                    <select name="worker_id" id="worker_id" class="select2 mt-1 w-full rounded-xl border-gray-300">
+                        <option value="">Select worker…</option>
+                        @foreach($workers as $w)
+                            <option value="{{ $w->id }}">{{ $w->name }}</option>
+                        @endforeach
+                    </select>
+                    <p class="text-[11px] text-gray-400 mt-1">Selected worker’s name will be saved in description.</p>
+                    </div>
+                 </div>
+                <div class="sm:col-span-6">
                     <label class="block text-sm font-medium">Description</label>
                     <input name="description" class="mt-1 w-full rounded-xl border-gray-300" />
                 </div>
                 <div class="sm:col-span-6">
-                    <button class="px-4 py-2 rounded-xl bg-indigo-600 text-white">Add Expense</button>
+                    <button class="px-4 py-2 rounded-xl bg-indigo-600 text-white">Add</button>
                 </div>
             </form>
         </div>
@@ -261,7 +281,7 @@
                                  x-transition:enter-end="translate-y-0 opacity-100"
                                  x-transition:leave="transition ease-in duration-150"
                                  x-transition:leave-start="translate-y-0 opacity-100"
-                                 x-transition:leave-end="translate-y-8 opacity-0">
+                                 x-transition:leave-end="translate-y-8 opacity-0" style="height: fit-content;">
 
                                 <div class="flex items-center justify-between mb-2">
                                     <h3 class="text-base font-semibold">Edit Expense</h3>
@@ -282,7 +302,7 @@
                                         <select name="account_code_id" id="account_code_id_edit_{{ $e->id }}"
                                                 class="mt-1 w-full rounded-xl border-gray-300">
                                             @foreach($accountCodes as $ac)
-                                                <option value="{{ $ac->id }}" @selected($e->account_code_id == $ac->id)>
+                                                <option value="{{ $ac->id }}" data-type="{{ $ac->account_code_type_id }}" @selected($e->account_code_id == $ac->id)>
                                                     {{ $ac->code }} — {{ $ac->name }}
                                                 </option>
                                             @endforeach
@@ -390,7 +410,7 @@
                                         <select name="account_code_id" class="mt-1 w-full rounded-xl border-gray-300">
                                             @foreach($accountCodes as $ac)
                                                 @if($ac->account_code_type_id == 12) {{-- Revenue only for incomes --}}
-                                                    <option value="{{ $ac->id }}" @selected($inc->account_code_id == $ac->id)>
+                                                    <option value="{{ $ac->id }}"  data-type="{{ $ac->account_code_type_id }}" @selected($inc->account_code_id == $ac->id)>
                                                         {{ $ac->code }} — {{ $ac->name }} (Income)
                                                     </option>
                                                 @endif
@@ -441,5 +461,39 @@
                 width: '100%'
             });
         });
+    </script>
+    <script>
+    $(function () {
+        const TYPE_WORKER = 15;
+
+        function toggleWorker() {
+            const typeId = parseInt($('#account_code_id option:selected').data('type')) || 0;
+            console.log(typeId);
+        if (typeId === TYPE_WORKER) {
+            $('#worker_wrap').removeClass('hidden');
+        } else {
+            $('#worker_wrap').addClass('hidden');
+            $('#worker_id').val(null).trigger('change');
+        }
+        }
+
+        $('#account_code_id').on('change', toggleWorker);
+        toggleWorker();
+
+        // On submit: if worker chosen & description empty, fill with worker name
+        $('form[action*="projects/"][action$="/expenses"]').on('submit', function () {
+        const typeId = parseInt($('#account_code_id option:selected').data('type')) || 0;
+        if (typeId === TYPE_WORKER) {
+            const workerText = $('#worker_id option:selected').text().trim();
+            const desc = $('#description').val().trim();
+            if (!desc && workerText) {
+            $('#description').val(workerText);
+            }
+        }
+        });
+
+        // Enhance selects
+        $('.select2').select2({ placeholder: "Search…", allowClear: true, width: '100%' });
+    });
     </script>
 </x-app-layout>

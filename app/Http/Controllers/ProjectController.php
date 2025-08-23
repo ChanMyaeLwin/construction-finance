@@ -6,6 +6,7 @@ use App\Models\Project;
 use App\Models\ProjectType;
 use App\Models\AccountCode;
 use App\Models\ExpenseCode;
+use App\Models\Worker;
 use Illuminate\Http\Request;
 
 class ProjectController extends Controller
@@ -57,8 +58,9 @@ class ProjectController extends Controller
 
         // For selects in the Add form:
         $accountCodes = AccountCode::orderBy('code')->get(['id','code','name','account_code_type_id']);
+        $workers = Worker::where('is_active', true)->orderBy('name')->get(['id','name']);
 
-        return view('projects.show', compact('project','accountCodes'));
+        return view('projects.show', compact('project','accountCodes','workers'));
     }
 
     public function edit(Project $project)

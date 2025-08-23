@@ -9,6 +9,7 @@ use App\Http\Controllers\ProjectTypeController;
 use App\Http\Controllers\AccountCodeTypeController;
 use App\Http\Controllers\ProjectStepController;
 use App\Http\Controllers\IncomeController;
+use App\Http\Controllers\WorkerController;
 
 Route::get('/', fn() => redirect()->route('dashboard'));
 Route::get('/dashboard', function () {
@@ -36,12 +37,12 @@ Route::middleware(['auth'])->group(function () {
     Route::get('reports/cashbook', [ReportController::class, 'cashbook'])->name('reports.cashbook');
     Route::get('reports/notes', [ReportController::class, 'notes'])->name('reports.notes');
     Route::get('reports/pnl', [ReportController::class, 'pnl'])->name('reports.pnl');
-});
 
-Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+
+    Route::resource('workers', WorkerController::class);
 });
 
 require __DIR__.'/auth.php';

@@ -34,6 +34,10 @@
                         Expenses
                     </x-nav-link>
 
+                     <x-nav-link href="{{ route('workers.index') }}" :active="request()->routeIs('workers.*')">
+                        Workers
+                    </x-nav-link>
+
                     <!-- Codes dropdown (desktop) -->
                     <div x-data="{ openCodes:false }" class="relative">
                         <button @click="openCodes = !openCodes"
@@ -135,6 +139,10 @@
 
             <x-responsive-nav-link href="{{ route('expenses.index') }}" :active="request()->routeIs('expenses.index')">
                 Expenses
+            </x-responsive-nav-link>
+
+            <x-responsive-nav-link href="{{ route('workers.index') }}" :active="request()->routeIs('workers.index')">
+                Workers
             </x-responsive-nav-link>
 
             <div class="px-4 pt-2 text-xs font-semibold text-gray-500">Codes</div>

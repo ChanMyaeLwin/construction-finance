@@ -21,6 +21,14 @@
                     @endforeach
                 </select>
             </div>
+            <div class="sm:col-span-2">
+                <label class="block text-sm text-gray-600">Description contains</label>
+                <input type="text"
+                    name="q"
+                    value="{{ request('q') }}"
+                    placeholder="e.g. diesel, supplier name"
+                    class="mt-1 w-full rounded-xl border-gray-300" />
+            </div>
             <div>
                 <label class="block text-sm text-gray-600">From</label>
                 <input type="date" name="from" value="{{ request('from') }}" class="mt-1 w-full rounded-xl border-gray-300" />
@@ -45,6 +53,7 @@
                         <th class="py-2 px-3">Date</th>
                         <th class="px-3">Project</th>
                         <th class="px-3">Account Code</th>
+                        <th class="px-3">Description</th>
                         <th class="px-3 text-right">Amount</th>
                         <th class="px-3 text-right">User</th>
                     </tr>
@@ -55,8 +64,9 @@
                         <td class="py-2 px-3">{{ $e->expense_date->format('Y-m-d') }}</td>
                         <td class="px-3">{{ $e->project->name }}</td>
                         <td class="px-3">{{ $e->accountCode->code }} <br> {{ $e->accountCode->name }}</td>
+                        <td class="px-3">{{ $e->description }}</td>
                         <td class="px-3 text-right">{{ number_format($e->amount,2) }}</td>
-                        <td class="px-3">{{ $e->user->name }}</td>
+                        <td class="px-3 text-right">{{ $e->user->name }}</td>
                     </tr>
                     @empty
                     <tr>

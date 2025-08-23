@@ -8,7 +8,7 @@ class Expense extends Model
 {
     protected $fillable = [
         'project_id', 'account_code_id', 'user_id',
-        'expense_date', 'amount', 'description',
+        'expense_date', 'amount', 'description','worker_id'
     ];
 
     protected $casts = [
@@ -19,4 +19,8 @@ class Expense extends Model
     public function project(): BelongsTo { return $this->belongsTo(Project::class); }
     public function accountCode(): BelongsTo { return $this->belongsTo(AccountCode::class); }
     public function user(): BelongsTo { return $this->belongsTo(User::class); }
+    public function worker()
+    {
+        return $this->belongsTo(\App\Models\Worker::class);
+    }
 }
