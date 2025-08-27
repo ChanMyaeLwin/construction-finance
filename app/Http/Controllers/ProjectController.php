@@ -46,21 +46,35 @@ class ProjectController extends Controller
         return redirect()->route('projects.index')->with('success', 'Project created.');
     }
 
-    public function show(Project $project)
+   public function show(Project $project)
     {
-        $project->load([
-            'projectType',
-            'steps',
-            'expenses.accountCode','expenses.user',
-            'incomes.accountCode','incomes.user',
-        ])->loadSum('expenses', 'amount')
-        ->loadSum('incomes', 'amount');
+        // Eager-load light relations for the header and steps
+        $project->load(['projectType', 'steps']);
 
-        // For selects in the Add form:
+        // Latest 5 (by created_at desc)
+        $recentExpenses = $project->expenses()
+            ->with(['accountCode'])
+            ->latest('created_at')
+            ->take(5)
+            ->get();
+
+        $recentIncomes = $project->incomes()
+            ->with(['accountCode'])
+            ->latest('created_at')
+            ->take(5)
+            ->get();
+
+        // For “Add Daily Expense / Income” form
         $accountCodes = AccountCode::orderBy('code')->get(['id','code','name','account_code_type_id']);
-        $workers = Worker::where('is_active', true)->orderBy('name')->get(['id','name']);
+        $workers      = Worker::where('is_active', true)->orderBy('name')->get(['id','name']);
 
-        return view('projects.show', compact('project','accountCodes','workers'));
+        // For header totals
+        $project->loadSum('expenses', 'amount');
+        $project->loadSum('incomes', 'amount');
+
+        return view('projects.show', compact(
+            'project', 'accountCodes', 'workers', 'recentExpenses', 'recentIncomes'
+        ));
     }
 
     public function edit(Project $project)

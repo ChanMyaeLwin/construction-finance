@@ -12,8 +12,6 @@ use Illuminate\Support\Facades\Auth;
 
 class ExpenseController extends Controller
 {
-
-
     // Filterable list by account code and date range
     public function index(Request $request)
     {
@@ -35,8 +33,9 @@ class ExpenseController extends Controller
         $expenses     = $query->paginate(20)->withQueryString();
         $accountCodes = AccountCode::orderBy('code')->get();
         $projects     = Project::orderBy('name')->get(['id','name']);
+        $workers      = Worker::where('is_active', true)->orderBy('name')->get(['id','name']);
 
-        return view('expenses.index', compact('expenses', 'accountCodes', 'projects', 'totalExpense'))
+        return view('expenses.index', compact('expenses', 'accountCodes', 'projects', 'totalExpense', 'workers'))
             ->with('filters', [
                 'account_code_id' => $accountCodeId,
                 'project_id'      => $projectId,
@@ -58,10 +57,13 @@ class ExpenseController extends Controller
         ]);
 
         $ac = AccountCode::findOrFail($data['account_code_id']);
-
+        $data['user_id']    = \Illuminate\Support\Facades\Auth::id();
+        $data['project_id'] = $project->id;
         // Block Revenue (12) in expenses, if you want to keep this rule:
         if ((int)$ac->account_code_type_id === 12) {
-            return back()->withErrors(['account_code_id' => 'Revenue accounts cannot be used in expenses.']);
+            $data['income_date'] = $data['expense_date'];
+            Income::create($data);
+            return back()->with('success', 'Income added.');
         }
 
         // If worker type (15) => require worker_id and copy name to description if blank
@@ -74,8 +76,8 @@ class ExpenseController extends Controller
             $data['worker_id'] = null;
         }
 
-        $data['project_id'] = $project->id;
-        $data['user_id']    = \Illuminate\Support\Facades\Auth::id();
+        
+       
 
         Expense::create($data);
         return back()->with('success', 'Expense added.');
@@ -90,11 +92,13 @@ class ExpenseController extends Controller
             'description'     => 'nullable|string|max:255',
             'worker_id'       => 'nullable|exists:workers,id',
         ]);
-
+   
         $ac = AccountCode::findOrFail($data['account_code_id']);
 
         if ((int)$ac->account_code_type_id === 12) {
-            return back()->withErrors(['account_code_id' => 'Revenue accounts cannot be used in expenses.']);
+            $data['income_date'] = $data['expense_date'];
+            Income::create($data);
+            return back()->with('success', 'Income added.');
         }
 
         if ((int)$ac->account_code_type_id === 15) {

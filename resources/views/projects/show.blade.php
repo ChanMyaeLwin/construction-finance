@@ -205,16 +205,19 @@
             @endforelse
         </div>
 
-        {{-- Expenses (mobile-first cards + bottom-sheet edit) --}}
+       
+        {{-- Expenses (latest 5) --}}
         <div class="rounded-2xl border p-4 bg-white">
-            <h2 class="font-semibold mb-3">Expenses</h2>
+            <div class="flex items-center justify-between">
+                <h2 class="font-semibold mb-3">Expenses (latest 5)</h2>
+                <a href="{{ route('expenses.index', ['project_id' => $project->id]) }}"
+                class="text-sm text-indigo-600">View more →</a>
+            </div>
 
-            @forelse($project->expenses->sortByDesc('created_at') as $e)
-                @php
-                    $isIncome = optional($e->accountCode)->code === 'AC-40001';
-                @endphp
+            @forelse($recentExpenses as $e)
+                @php $isIncome = optional($e->accountCode)->code === 'AC-40001'; @endphp
                 <div x-data="{ open:false }"
-                     x-init="
+                    x-init="
                         $watch('open', v => {
                             const sel = $('#account_code_id_edit_{{ $e->id }}');
                             if (v) {
@@ -230,8 +233,8 @@
                                 if (sel.data('select2')) sel.select2('destroy');
                             }
                         });
-                     "
-                     class="mb-3 last:mb-0">
+                    "
+                    class="mb-3 last:mb-0">
 
                     <!-- Card -->
                     <div class="rounded-xl border border-gray-200 p-3">
@@ -257,7 +260,7 @@
                                             class="px-2 py-1 rounded-lg bg-gray-900 text-white text-xs">Edit</button>
 
                                     <form method="POST" action="{{ route('expenses.destroy', $e) }}" class="inline"
-                                          onsubmit="return confirm('Delete this expense?');">
+                                        onsubmit="return confirm('Delete this expense?');">
                                         @csrf @method('DELETE')
                                         <button class="px-2 py-1 rounded-lg bg-red-600 text-white text-xs">Delete</button>
                                     </form>
@@ -266,37 +269,29 @@
                         </div>
                     </div>
 
-                    <!-- Bottom-sheet modal -->
+                    <!-- Bottom-sheet modal (same as before) -->
                     <template x-teleport="body">
                         <div x-show="open" x-cloak class="fixed inset-0 z-50">
-                            <!-- Backdrop -->
                             <div class="absolute inset-0 bg-black/40" @click="open=false"></div>
-
-                            <!-- Sheet -->
                             <div id="edit-modal-{{ $e->id }}"
-                                 class="absolute inset-x-0 bottom-0 md:inset-1/2 md:-translate-x-1/2 md:translate-y-0 md:w-full md:max-w-lg 
-                                        bg-white rounded-t-2xl md:rounded-2xl shadow-lg p-4"
-                                 x-transition:enter="transition ease-out duration-200"
-                                 x-transition:enter-start="translate-y-8 opacity-0"
-                                 x-transition:enter-end="translate-y-0 opacity-100"
-                                 x-transition:leave="transition ease-in duration-150"
-                                 x-transition:leave-start="translate-y-0 opacity-100"
-                                 x-transition:leave-end="translate-y-8 opacity-0" style="height: fit-content;">
-
+                                class="relative z-[100000] w-full max-w-lg bg-white rounded-2xl shadow-lg p-6"
+                                x-transition:enter="transition ease-out duration-200"
+                                x-transition:enter-start="translate-y-8 opacity-0"
+                                x-transition:enter-end="translate-y-0 opacity-100"
+                                x-transition:leave="transition ease-in duration-150"
+                                x-transition:leave-start="translate-y-0 opacity-100"
+                                x-transition:leave-end="translate-y-8 opacity-0" style="height: 100%;">
                                 <div class="flex items-center justify-between mb-2">
                                     <h3 class="text-base font-semibold">Edit Expense</h3>
                                     <button type="button" @click="open=false" class="text-gray-500 hover:text-gray-700">✕</button>
                                 </div>
-
                                 <form id="exp-edit-{{ $e->id }}" method="POST" action="{{ route('expenses.update', $e) }}" class="grid gap-3">
                                     @csrf @method('PUT')
-
                                     <div>
                                         <label class="block text-sm text-gray-700">Date</label>
                                         <input type="date" name="expense_date" value="{{ $e->expense_date->format('Y-m-d') }}"
-                                               class="mt-1 w-full rounded-xl border-gray-300" required />
+                                            class="mt-1 w-full rounded-xl border-gray-300" required />
                                     </div>
-
                                     <div>
                                         <label class="block text-sm text-gray-700">Account Code</label>
                                         <select name="account_code_id" id="account_code_id_edit_{{ $e->id }}"
@@ -308,20 +303,17 @@
                                             @endforeach
                                         </select>
                                     </div>
-
                                     <div>
                                         <label class="block text-sm text-gray-700">Amount</label>
                                         <input type="number" step="0.01" min="0" name="amount" value="{{ $e->amount }}"
-                                               class="mt-1 w-full rounded-xl border-gray-300" required />
+                                            class="mt-1 w-full rounded-xl border-gray-300" required />
                                     </div>
-
                                     <div>
                                         <label class="block text-sm text-gray-700">Description</label>
                                         <input name="description" value="{{ $e->description }}"
-                                               class="mt-1 w-full rounded-xl border-gray-300" />
+                                            class="mt-1 w-full rounded-xl border-gray-300" />
                                     </div>
                                 </form>
-
                                 <div class="mt-3 flex justify-end gap-2">
                                     <button type="button" @click="open=false" class="px-3 py-2 rounded-xl bg-gray-100">Cancel</button>
                                     <button type="submit" form="exp-edit-{{ $e->id }}" class="px-3 py-2 rounded-xl bg-indigo-600 text-white">Save</button>
@@ -335,15 +327,16 @@
             @endforelse
         </div>
 
-        {{-- Incomes (mobile-first cards similar to Expenses) --}}
+        {{-- Incomes (latest 5) --}}
         <div class="rounded-2xl border p-4 bg-white">
             <div class="flex items-center justify-between">
-                <h2 class="font-semibold mb-3">Incomes</h2>
+                <h2 class="font-semibold mb-3">Incomes (latest 5)</h2>
+                <a href="{{ route('incomes.index', ['project_id' => $project->id]) }}"
+                class="text-sm text-indigo-600">View more →</a>
             </div>
 
-            @forelse($project->incomes->sortByDesc('created_at') as $inc)
+            @forelse($recentIncomes as $inc)
                 <div x-data="{ open:false }" class="mb-3 last:mb-0">
-                    <!-- Card -->
                     <div class="rounded-xl border border-gray-200 p-3">
                         <div class="flex items-start justify-between gap-3">
                             <div class="min-w-0">
@@ -361,7 +354,6 @@
                             <div class="text-right shrink-0">
                                 <div class="font-semibold">{{ number_format($inc->amount,2) }}</div>
                                 <div class="mt-2 space-x-2">
-                                    {{-- If you have Income routes, keep Edit/Delete; otherwise remove these buttons --}}
                                     <button type="button"
                                             @click="open=true"
                                             class="px-2 py-1 rounded-lg bg-gray-900 text-white text-xs">Edit</button>
@@ -376,61 +368,52 @@
                         </div>
                     </div>
 
-                    <!-- Optional bottom-sheet editor for Income -->
+                    {{-- Optional bottom sheet for income editing (unchanged) --}}
                     <template x-teleport="body">
                         <div x-show="open" x-cloak class="fixed inset-0 z-50">
                             <div class="absolute inset-0 bg-black/40" @click="open=false"></div>
-
                             <div id="edit-income-{{ $inc->id }}"
-                                class="absolute inset-x-0 bottom-0 md:inset-1/2 md:-translate-x-1/2 md:translate-y-0 md:w-full md:max-w-lg 
-                                        bg-white rounded-t-2xl md:rounded-2xl shadow-lg p-4"
+                                class="relative z-[100000] w-full max-w-lg bg-white rounded-2xl shadow-lg p-6"
                                 x-transition:enter="transition ease-out duration-200"
                                 x-transition:enter-start="translate-y-8 opacity-0"
                                 x-transition:enter-end="translate-y-0 opacity-100"
                                 x-transition:leave="transition ease-in duration-150"
                                 x-transition:leave-start="translate-y-0 opacity-100"
-                                x-transition:leave-end="translate-y-8 opacity-0">
-
+                                x-transition:leave-end="translate-y-8 opacity-0" style="height: 100%;">
                                 <div class="flex items-center justify-between mb-2">
                                     <h3 class="text-base font-semibold">Edit Income</h3>
                                     <button type="button" @click="open=false" class="text-gray-500 hover:text-gray-700">✕</button>
                                 </div>
-
                                 <form id="inc-edit-{{ $inc->id }}" method="POST" action="{{ route('incomes.update', $inc) }}" class="grid gap-3">
                                     @csrf @method('PUT')
-
                                     <div>
                                         <label class="block text-sm text-gray-700">Date</label>
                                         <input type="date" name="income_date" value="{{ \Illuminate\Support\Carbon::parse($inc->income_date)->format('Y-m-d') }}"
                                             class="mt-1 w-full rounded-xl border-gray-300" required />
                                     </div>
-
                                     <div>
                                         <label class="block text-sm text-gray-700">Account Code</label>
                                         <select name="account_code_id" class="mt-1 w-full rounded-xl border-gray-300">
                                             @foreach($accountCodes as $ac)
-                                                @if($ac->account_code_type_id == 12) {{-- Revenue only for incomes --}}
-                                                    <option value="{{ $ac->id }}"  data-type="{{ $ac->account_code_type_id }}" @selected($inc->account_code_id == $ac->id)>
+                                                @if($ac->account_code_type_id == 12)
+                                                    <option value="{{ $ac->id }}" data-type="{{ $ac->account_code_type_id }}" @selected($inc->account_code_id == $ac->id)>
                                                         {{ $ac->code }} — {{ $ac->name }} (Income)
                                                     </option>
                                                 @endif
                                             @endforeach
                                         </select>
                                     </div>
-
                                     <div>
                                         <label class="block text-sm text-gray-700">Amount</label>
                                         <input type="number" step="0.01" min="0" name="amount" value="{{ $inc->amount }}"
                                             class="mt-1 w-full rounded-xl border-gray-300" required />
                                     </div>
-
                                     <div>
                                         <label class="block text-sm text-gray-700">Description</label>
                                         <input name="description" value="{{ $inc->description }}"
                                             class="mt-1 w-full rounded-xl border-gray-300" />
                                     </div>
                                 </form>
-
                                 <div class="mt-3 flex justify-end gap-2">
                                     <button type="button" @click="open=false" class="px-3 py-2 rounded-xl bg-gray-100">Cancel</button>
                                     <button type="submit" form="inc-edit-{{ $inc->id }}" class="px-3 py-2 rounded-xl bg-indigo-600 text-white">Save</button>

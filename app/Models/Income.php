@@ -18,6 +18,10 @@ class Income extends Model
         'description',
     ];
 
+    protected $casts = [
+        'income_date' => 'date',
+    ];
+
     public function project()
     {
         return $this->belongsTo(Project::class);

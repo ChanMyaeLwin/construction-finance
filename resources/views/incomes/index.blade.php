@@ -1,6 +1,6 @@
 <x-app-layout>
-    <div class="max-w-5xl mx-auto p-4 sm:p-6" x-data="expenseModal()">
-        <h1 class="text-xl font-bold mb-3">Expenses</h1>
+    <div class="max-w-5xl mx-auto p-4 sm:p-6" x-data="incomeModal()">
+        <h1 class="text-xl font-bold mb-3">Incomes</h1>
 
         {{-- Filters --}}
         <form method="GET" class="grid gap-3 sm:grid-cols-5 mb-4">
@@ -13,6 +13,7 @@
                     @endforeach
                 </select>
             </div>
+
             <div class="sm:col-span-2">
                 <label class="block text-sm text-gray-600">Account Code</label>
                 <select name="account_code_id" class="select2 mt-1 w-full rounded-xl border-gray-300">
@@ -24,26 +25,34 @@
                     @endforeach
                 </select>
             </div>
+
             <div class="sm:col-span-2">
                 <label class="block text-sm text-gray-600">Description contains</label>
-                <input type="text" name="q" value="{{ request('q') }}" placeholder="e.g. diesel, supplier name"
+                <input type="text"
+                       name="q"
+                       value="{{ request('q') }}"
+                       placeholder="e.g. client, source"
                        class="mt-1 w-full rounded-xl border-gray-300" />
             </div>
+
             <div>
                 <label class="block text-sm text-gray-600">From</label>
                 <input type="date" name="from" value="{{ request('from') }}" class="mt-1 w-full rounded-xl border-gray-300" />
             </div>
+
             <div>
                 <label class="block text-sm text-gray-600">To</label>
                 <input type="date" name="to" value="{{ request('to') }}" class="mt-1 w-full rounded-xl border-gray-300" />
             </div>
+
             <div class="flex items-end">
                 <button class="w-full px-4 py-2 rounded-xl bg-gray-900 text-white">Filter</button>
             </div>
         </form>
 
+        {{-- Totals --}}
         <div class="mb-4">
-            <strong>Total Expense:</strong> {{ number_format($totalExpense, 2) }}
+            <strong>Total Income:</strong> {{ number_format($totalIncome, 2) }}
         </div>
 
         {{-- Table --}}
@@ -61,54 +70,57 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @forelse($expenses as $e)
+                    @forelse($incomes as $inc)
                         <tr class="border-t">
-                            <td class="py-2 px-3">{{ $e->expense_date->format('Y-m-d') }}</td>
-                            <td class="px-3">{{ $e->project->name }}</td>
-                            <td class="px-3">{{ $e->accountCode->code }} <br> {{ $e->accountCode->name }}</td>
-                            <td class="px-3">{{ $e->description }}</td>
-                            <td class="px-3 text-right">{{ number_format($e->amount,2) }}</td>
-                            <td class="px-3 text-right">{{ $e->user->name }}</td>
+                            <td class="py-2 px-3">{{ \Carbon\Carbon::parse($inc->income_date)->format('Y-m-d') }}</td>
+                            <td class="px-3">{{ $inc->project->name ?? '—' }}</td>
+                            <td class="px-3">
+                                {{ optional($inc->accountCode)->code }} <br>
+                                {{ optional($inc->accountCode)->name }}
+                            </td>
+                            <td class="px-3">{{ $inc->description ?: '—' }}</td>
+                            <td class="px-3 text-right">{{ number_format($inc->amount,2) }}</td>
+                            <td class="px-3 text-right">{{ $inc->user->name ?? '—' }}</td>
                             <td class="px-3 text-right whitespace-nowrap">
                                 <button type="button"
-                                        @click="$dispatch('open-expense', {
-                                            id: {{ $e->id }},
-                                            date: '{{ $e->expense_date->format('Y-m-d') }}',
-                                            account_code_id: {{ (int) $e->account_code_id }},
-                                            amount: '{{ $e->amount }}',
-                                            description: @js($e->description ?? '')
+                                        @click="$dispatch('open-income', {
+                                            id: {{ $inc->id }},
+                                            date: '{{ \Carbon\Carbon::parse($inc->income_date)->format('Y-m-d') }}',
+                                            account_code_id: {{ (int) $inc->account_code_id }},
+                                            amount: '{{ $inc->amount }}',
+                                            description: @js($inc->description ?? '')
                                         })"
                                         class="text-indigo-600">Edit</button>
                                 <span class="mx-1">·</span>
-                                <form method="POST" action="{{ route('expenses.destroy', $e) }}" class="inline"
-                                      onsubmit="return confirm('Delete this expense?');">
+                                <form method="POST" action="{{ route('incomes.destroy', $inc) }}" class="inline"
+                                      onsubmit="return confirm('Delete this income?');">
                                     @csrf @method('DELETE')
                                     <button class="text-red-600">Delete</button>
                                 </form>
                             </td>
                         </tr>
                     @empty
-                        <tr><td colspan="7" class="py-4 text-center text-gray-500">No data</td></tr>
+                        <tr><td colspan="7" class="py-4 text-center text-gray-500">No incomes yet.</td></tr>
                     @endforelse
                 </tbody>
             </table>
         </div>
 
-        <div class="mt-4">{{ $expenses->links() }}</div>
+        <div class="mt-4">{{ $incomes->links() }}</div>
 
         {{-- =================== GLOBAL EDIT MODAL (centered) =================== --}}
         <div x-show="open"
              x-cloak
              class="fixed inset-0 z-[99999] flex items-center justify-center"
-             x-on:open-expense.window="openModal($event.detail)">
+             x-on:open-income.window="openModal($event.detail)">
             <!-- Backdrop -->
             <div class="absolute inset-0 bg-black/60" @click="closeModal()"></div>
 
             <!-- Centered modal -->
-            <div id="expense-global-modal"
+            <div id="income-global-modal"
                  class="relative z-[100000] w-full max-w-lg bg-white rounded-2xl shadow-lg p-6">
                 <div class="flex items-center justify-between mb-4">
-                    <h3 class="text-base font-semibold">Edit Expense</h3>
+                    <h3 class="text-base font-semibold">Edit Income</h3>
                     <button type="button" @click="closeModal()" class="text-gray-500 hover:text-gray-700">✕</button>
                 </div>
 
@@ -117,16 +129,18 @@
 
                     <div>
                         <label class="block text-sm text-gray-700">Date</label>
-                        <input type="date" name="expense_date" x-model="date"
+                        <input type="date" name="income_date" x-model="date"
                                class="mt-1 w-full rounded-xl border-gray-300" required />
                     </div>
 
                     <div>
                         <label class="block text-sm text-gray-700">Account Code</label>
-                        <select name="account_code_id"  id="account_code_id" x-ref="acSelect"
+                        <select name="account_code_id" x-ref="acSelect"
                                 class="mt-1 w-full rounded-xl border-gray-300">
                             @foreach($accountCodes as $ac)
-                                <option value="{{ $ac->id }}" data-type="{{ $ac->account_code_type_id }}">{{ $ac->code }} — {{ $ac->name }}</option>
+                                @if($ac->account_code_type_id == 12)
+                                    <option value="{{ $ac->id }}">{{ $ac->code }} — {{ $ac->name }}</option>
+                                @endif
                             @endforeach
                         </select>
                     </div>
@@ -136,19 +150,6 @@
                         <input type="number" step="0.01" min="0" name="amount" x-model="amount"
                                class="mt-1 w-full rounded-xl border-gray-300" required />
                     </div>
-                    <div>
-                 {{-- Worker (hidden unless type=15) --}}
-                    <div id="worker_wrap" class="mt-3 hidden">
-                    <label class="block text-sm font-medium">Worker</label>
-                    <select name="worker_id" id="worker_id" class="select2 mt-1 w-full rounded-xl border-gray-300">
-                        <option value="">Select worker…</option>
-                        @foreach($workers as $w)
-                            <option value="{{ $w->id }}">{{ $w->name }}</option>
-                        @endforeach
-                    </select>
-                    <p class="text-[11px] text-gray-400 mt-1">Selected worker’s name will be saved in description.</p>
-                    </div>
-                 </div>
 
                     <div>
                         <label class="block text-sm text-gray-700">Description</label>
@@ -177,10 +178,10 @@
           $('.select2').select2({ placeholder: 'Choose…', allowClear: true, width: '100%' });
         });
 
-        window.expenseModal = function () {
+        window.incomeModal = function () {
             return {
                 open:false,id:null,date:'',account_code_id:'',amount:'',description:'',
-                updateBase:'{{ url('/expenses') }}',
+                updateBase:'{{ url('/incomes') }}',
                 formAction(){ return this.updateBase + '/' + this.id; },
                 openModal(detail){
                     this.id=detail.id; this.date=detail.date; this.account_code_id=String(detail.account_code_id||'');
@@ -189,7 +190,7 @@
                         const $sel=$(this.$refs.acSelect);
                         if ($.fn && $.fn.select2) {
                             if(!$sel.data('select2')){
-                                $sel.select2({ placeholder:'Choose…', allowClear:true, width:'100%', dropdownParent:$('#expense-global-modal') });
+                                $sel.select2({ placeholder:'Choose…', allowClear:true, width:'100%', dropdownParent:$('#income-global-modal') });
                                 $sel.on('change',(e)=>{ this.account_code_id=$(e.target).val(); });
                             }
                             $sel.val(this.account_code_id).trigger('change');
@@ -201,39 +202,5 @@
                 closeModal(){ this.open=false; }
             }
         }
-    </script>
-      <script>
-    $(function () {
-        const TYPE_WORKER = 15;
-
-        function toggleWorker() {
-            const typeId = parseInt($('#account_code_id option:selected').data('type')) || 0;
-            console.log(typeId);
-        if (typeId === TYPE_WORKER) {
-            $('#worker_wrap').removeClass('hidden');
-        } else {
-            $('#worker_wrap').addClass('hidden');
-            $('#worker_id').val(null).trigger('change');
-        }
-        }
-
-        $('#account_code_id').on('change', toggleWorker);
-        toggleWorker();
-
-        // On submit: if worker chosen & description empty, fill with worker name
-        $('form[action*="projects/"][action$="/expenses"]').on('submit', function () {
-        const typeId = parseInt($('#account_code_id option:selected').data('type')) || 0;
-        if (typeId === TYPE_WORKER) {
-            const workerText = $('#worker_id option:selected').text().trim();
-            const desc = $('#description').val().trim();
-            if (!desc && workerText) {
-            $('#description').val(workerText);
-            }
-        }
-        });
-
-        // Enhance selects
-        $('.select2').select2({ placeholder: "Search…", allowClear: true, width: '100%' });
-    });
     </script>
 </x-app-layout>

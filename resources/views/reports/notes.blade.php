@@ -93,18 +93,7 @@
                     @endforelse
                 </tbody>
 
-                @if(!empty($groups))
-                <tfoot>
-                    <tr class="border-t bg-gray-100 font-semibold">
-                        <td class="py-2 px-3 sticky left-0 bg-gray-100">Grand Total</td>
-                        <td class="px-3 sticky left-28 bg-gray-100"></td>
-                        @foreach($monthKeys as $ym)
-                            <td class="px-3 text-right">{{ number_format($totalsPerMonth[$ym] ?? 0, 2) }}</td>
-                        @endforeach
-                        <td class="px-3 text-right">{{ number_format($grandTotal, 2) }}</td>
-                    </tr>
-                </tfoot>
-                @endif
+             
             </table>
         </div>
 
@@ -160,25 +149,7 @@
                 <div class="rounded-xl border border-dashed p-6 text-center text-gray-500">No data.</div>
             @endforelse
 
-            @if(!empty($groups))
-            <div class="rounded-xl border bg-white p-3">
-                <div class="font-semibold mb-2">Grand Total</div>
-                <div class="grid grid-cols-2 gap-2">
-                    @foreach($monthKeys as $ym)
-                        @if(($totalsPerMonth[$ym] ?? 0) != 0)
-                            <div class="flex items-center justify-between rounded-lg bg-gray-50 px-2 py-1">
-                                <div class="text-xs text-gray-500">{{ $monthLabels[$ym] }}</div>
-                                <div class="text-sm font-medium">{{ number_format($totalsPerMonth[$ym], 2) }}</div>
-                            </div>
-                        @endif
-                    @endforeach
-                    <div class="col-span-2 text-right mt-2">
-                        <span class="text-gray-500 text-sm">Grand Total:</span>
-                        <span class="font-semibold">{{ number_format($grandTotal, 2) }}</span>
-                    </div>
-                </div>
-            </div>
-            @endif
+            
         </div>
     </div>
     <script>

@@ -24,11 +24,11 @@ Route::middleware(['auth'])->group(function () {
     Route::delete('steps/{step}', [ProjectStepController::class,'destroy'])->name('steps.destroy');
 
     Route::get('expenses', [ExpenseController::class, 'index'])->name('expenses.index');
+    Route::get('incomes', [IncomeController::class, 'index'])->name('incomes.index');
     Route::post('projects/{project}/expenses', [ExpenseController::class, 'store'])->name('projects.expenses.store');
-    Route::put('expenses/{expense}', [ExpenseController::class, 'update'])->name('expenses.update');
-    Route::delete('expenses/{expense}', [ExpenseController::class, 'destroy'])->name('expenses.destroy');
 
     Route::resource('incomes', IncomeController::class)->only(['update','destroy']);
+    Route::resource('expenses', ExpenseController::class)->only(['update','destroy']);
 
     Route::resource('account-code-types', AccountCodeTypeController::class)->except(['show']);
     Route::resource('account-codes', AccountCodeController::class);

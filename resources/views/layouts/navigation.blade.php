@@ -26,8 +26,8 @@
                         Projects
                     </x-nav-link>
 
-                    <x-nav-link href="{{ route('project-types.index') }}" :active="request()->routeIs('project-types.*')">
-                        Project Types
+                    <x-nav-link href="{{ route('incomes.index') }}" :active="request()->routeIs('incomes.index')">
+                        Incomes
                     </x-nav-link>
 
                     <x-nav-link href="{{ route('expenses.index') }}" :active="request()->routeIs('expenses.index')">
@@ -37,25 +37,6 @@
                      <x-nav-link href="{{ route('workers.index') }}" :active="request()->routeIs('workers.*')">
                         Workers
                     </x-nav-link>
-
-                    <!-- Codes dropdown (desktop) -->
-                    <div x-data="{ openCodes:false }" class="relative">
-                        <button @click="openCodes = !openCodes"
-                            class="inline-flex items-center h-16 px-3 text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-700 focus:outline-none
-                                transition duration-150 ease-in-out"
-                            :class="{'border-indigo-400 text-gray-900': {{ request()->routeIs('account-codes.*') || request()->routeIs('expense-codes.*') ? 'true' : 'false' }} }">
-                            Codes
-                            <svg class="ml-1 h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                                <path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 10.94l3.71-3.71a.75.75 0 111.06 1.06l-4.24 4.24a.75.75 0 01-1.06 0L5.21 8.29a.75.75 0 01.02-1.08z" clip-rule="evenodd"/>
-                            </svg>
-                        </button>
-                        <div x-show="openCodes" @click.away="openCodes=false"
-                            x-cloak
-                            class="absolute z-40 mt-2 w-44 rounded-xl border bg-white shadow">
-                            <a href="{{ route('account-codes.index') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">Account Codes</a>
-                    
-                        </div>
-                    </div>
 
                     <!-- Reports dropdown (desktop) -->
                     <div x-data="{ openReports:false }" class="relative">
@@ -75,6 +56,26 @@
                             <a href="{{ route('reports.cashbook') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">Cash Book</a>
                             <a href="{{ route('reports.notes') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">Notes (Monthly)</a>
                             <a href="{{ route('reports.pnl') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">Profit and Loss (Monthly)</a>
+                        </div>
+                    </div>
+
+                     <!-- Codes dropdown (desktop) -->
+                    <div x-data="{ openCodes:false }" class="relative">
+                        <button @click="openCodes = !openCodes"
+                            class="inline-flex items-center h-16 px-3 text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-700 focus:outline-none
+                                transition duration-150 ease-in-out"
+                            :class="{'border-indigo-400 text-gray-900': {{ request()->routeIs('account-codes.*') || request()->routeIs('expense-codes.*') ? 'true' : 'false' }} }">
+                            Settings
+                            <svg class="ml-1 h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 10.94l3.71-3.71a.75.75 0 111.06 1.06l-4.24 4.24a.75.75 0 01-1.06 0L5.21 8.29a.75.75 0 01.02-1.08z" clip-rule="evenodd"/>
+                            </svg>
+                        </button>
+                        <div x-show="openCodes" @click.away="openCodes=false"
+                            x-cloak
+                            class="absolute z-40 mt-2 w-44 rounded-xl border bg-white shadow">
+                            <a href="{{ route('account-code-types.index') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">Account Code Types</a>
+                            <a href="{{ route('account-codes.index') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">Account Codes</a>
+                            <a href="{{ route('project-types.index') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">Product Types</a>
                         </div>
                     </div>
                 </div>
@@ -133,8 +134,8 @@
                 Projects
             </x-responsive-nav-link>
 
-            <x-responsive-nav-link href="{{ route('project-types.index') }}" :active="request()->routeIs('project-types.*')">
-                Project Types
+            <x-responsive-nav-link href="{{ route('incomes.index') }}" :active="request()->routeIs('incomes.*')">
+                Incomes
             </x-responsive-nav-link>
 
             <x-responsive-nav-link href="{{ route('expenses.index') }}" :active="request()->routeIs('expenses.index')">
@@ -145,13 +146,7 @@
                 Workers
             </x-responsive-nav-link>
 
-            <div class="px-4 pt-2 text-xs font-semibold text-gray-500">Codes</div>
-            <x-responsive-nav-link href="{{ route('account-code-types.index') }}" :active="request()->routeIs('account-code-types.*')">
-                Account Code Types
-            </x-responsive-nav-link>
-            <x-responsive-nav-link href="{{ route('account-codes.index') }}" :active="request()->routeIs('account-codes.*')" class="pl-8">
-                Account Codes
-            </x-responsive-nav-link>
+            <div class="px-4 pt-2 text-xs font-semibold text-gray-500">Reports</div>
 
             <x-responsive-nav-link href="{{ route('reports.summary') }}" :active="request()->routeIs('reports.summary')">
                 Reports
@@ -166,6 +161,17 @@
             
             <x-responsive-nav-link href="{{ route('reports.pnl') }}" :active="request()->routeIs('reports.pnl')">
                 Profit and Loss (Monthly)
+            </x-responsive-nav-link>
+            
+            <div class="px-4 pt-2 text-xs font-semibold text-gray-500">Settings</div>
+            <x-responsive-nav-link href="{{ route('account-code-types.index') }}" :active="request()->routeIs('account-code-types.*')">
+                Account Code Types
+            </x-responsive-nav-link>
+            <x-responsive-nav-link href="{{ route('account-codes.index') }}" :active="request()->routeIs('account-codes.*')" class="pl-8">
+                Account Codes
+            </x-responsive-nav-link>
+             <x-responsive-nav-link href="{{ route('project-types.index') }}" :active="request()->routeIs('project-types.*')">
+                Project Types
             </x-responsive-nav-link>
         </div>
 
