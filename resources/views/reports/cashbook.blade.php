@@ -4,7 +4,6 @@
             <h1 class="text-xl font-bold">Cash Book</h1>
         </div>
        
-
         {{-- Filters --}}
         <form method="GET" class="grid gap-3 sm:grid-cols-6 rounded-2xl border bg-white p-4">
             <div class="sm:col-span-2">
@@ -12,18 +11,43 @@
                 <select name="project_id" class="mt-1 w-full rounded-xl border-gray-300">
                     <option value="">All Projects</option>
                     @foreach($projects as $p)
-                        <option value="{{ $p->id }}" @selected(request('project_id') == $p->id)>{{ $p->name }}</option>
+                        <option value="{{ $p->id }}" @selected($selectedProjectId == $p->id)>{{ $p->name }}</option>
                     @endforeach
                 </select>
             </div>
+
+            {{-- NEW: Account Code --}}
+            <div class="sm:col-span-2">
+                <label class="block text-sm text-gray-600">Account Code</label>
+                <select name="account_code_id" class="select2 mt-1 w-full rounded-xl border-gray-300">
+                    <option value="">All Codes</option>
+                    @foreach($accountCodes as $ac)
+                        <option value="{{ $ac->id }}" @selected(($selectedAccountId ?? null) == $ac->id)>
+                            {{ $ac->code }} — {{ $ac->name }}
+                        </option>
+                    @endforeach
+                </select>
+            </div>
+
+            {{-- NEW: Description contains --}}
+            <div class="sm:col-span-2">
+                <label class="block text-sm text-gray-600">Description contains</label>
+                <input type="text"
+                       name="q"
+                       value="{{ $q }}"
+                       placeholder="e.g. diesel, client, supplier"
+                       class="mt-1 w-full rounded-xl border-gray-300" />
+            </div>
+
             <div>
                 <label class="block text-sm text-gray-600">From</label>
-                <input type="date" name="from" value="{{ request('from') }}" class="mt-1 w-full rounded-xl border-gray-300" />
+                <input type="date" name="from" value="{{ $from }}" class="mt-1 w-full rounded-xl border-gray-300" />
             </div>
             <div>
                 <label class="block text-sm text-gray-600">To</label>
-                <input type="date" name="to" value="{{ request('to') }}" class="mt-1 w-full rounded-xl border-gray-300" />
+                <input type="date" name="to" value="{{ $to }}" class="mt-1 w-full rounded-xl border-gray-300" />
             </div>
+
             <div class="flex items-end">
                 <button class="w-full px-4 py-2 rounded-xl bg-gray-900 text-white">Apply</button>
             </div>
@@ -49,7 +73,8 @@
                 </div>
             </div>
         </div>
-        {{-- Mobile-first list (cards on small screens, table on larger) --}}
+
+        {{-- Transactions --}}
         <div class="rounded-2xl border bg-white">
             {{-- Desktop/tablet table --}}
             <div class="hidden md:block overflow-x-auto">
@@ -66,10 +91,10 @@
                     </tr>
                     </thead>
                     <tbody>
-                    {{-- Opening balance row (optional visual) --}}
+                    {{-- Opening balance row --}}
                     <tr class="border-t bg-gray-50">
                         <td class="py-2 px-3" colspan="6">Opening Balance</td>
-                        <td class="px-3 text-right font-semibold">{{ number_format($openingBalance, 2) }}</td>
+                        <td class="px-3 text-right font-medium">{{ number_format($openingBalance, 2) }}</td>
                     </tr>
 
                     @forelse($items as $row)
@@ -83,7 +108,7 @@
                             <td class="px-3 text-right font-medium">{{ number_format($row['balance'],2) }}</td>
                         </tr>
                     @empty
-                        <tr><td colspan="7" class="py-4 text-center text-gray-500">No entries.</td></tr>
+                        <tr><td colspan="8" class="py-4 text-center text-gray-500">No entries.</td></tr>
                     @endforelse
                     </tbody>
                 </table>
@@ -123,4 +148,9 @@
             </div>
         </div>
     </div>
+    <script>
+         $(function(){
+          $('.select2').select2({ placeholder: 'Choose…', allowClear: true, width: '100%' });
+        });
+    </script>
 </x-app-layout>

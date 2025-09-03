@@ -34,50 +34,50 @@ class ReportController extends Controller
 
     public function cashbook(Request $request)
 {
-    $projectId            = $request->integer('project_id');
-    $from                 = $request->date('from');
-    $to                   = $request->date('to');
-    $openingBalance       = (float) $request->input('opening_balance', 0);
-    $accountCodeTypeId    = $request->integer('account_code_type_id'); // NEW: filter by type
+    $projectId        = $request->integer('project_id');
+    $from             = $request->date('from');
+    $to               = $request->date('to');
+    $openingBalance   = (float) $request->input('opening_balance', 0);
+    $accountCodeId    = $request->integer('account_code_id');     // NEW: filter by A/C
+    $q                = trim((string) $request->input('q', ''));  // NEW: description contains
 
     // EXPENSES (outflows → credit)
-    $expQ = Expense::query()
+    $expQ = \App\Models\Expense::query()
         ->leftJoin('account_codes', 'account_codes.id', '=', 'expenses.account_code_id')
         ->leftJoin('account_code_types', 'account_code_types.id', '=', 'account_codes.account_code_type_id')
-        ->when($projectId, fn($q) => $q->where('expenses.project_id', $projectId))
-        ->when($from, fn($q) => $q->whereDate('expenses.expense_date', '>=', $from))
-        ->when($to, fn($q) => $q->whereDate('expenses.expense_date', '<=', $to))
-        ->when($accountCodeTypeId, fn($q) => $q->where('account_codes.account_code_type_id', $accountCodeTypeId))
+        ->when($projectId, fn($q2) => $q2->where('expenses.project_id', $projectId))
+        ->when($from, fn($q2) => $q2->whereDate('expenses.expense_date', '>=', $from))
+        ->when($to, fn($q2) => $q2->whereDate('expenses.expense_date', '<=', $to))
+        ->when($accountCodeId, fn($q2) => $q2->where('expenses.account_code_id', $accountCodeId))
+        ->when($q !== '', fn($q2) => $q2->where('expenses.description', 'like', "%{$q}%"))
         ->selectRaw("
             expenses.expense_date as dt,
             account_codes.code as code,
             account_codes.name as name,
-            account_code_types.id   as type_id,
             COALESCE(account_code_types.name, 'Uncategorized') as type_name,
             expenses.description as description,
             expenses.created_at as created_at,
-
             0 as debit,
             expenses.amount as credit
         ");
 
     // INCOMES (inflows → debit)
-    $incQ = Income::query()
+    $incQ = \App\Models\Income::query()
         ->leftJoin('account_codes', 'account_codes.id', '=', 'incomes.account_code_id')
         ->leftJoin('account_code_types', 'account_code_types.id', '=', 'account_codes.account_code_type_id')
-        ->when($projectId, fn($q) => $q->where('incomes.project_id', $projectId))
-        ->when($from, fn($q) => $q->whereDate('incomes.income_date', '>=', $from))
-        ->when($to, fn($q) => $q->whereDate('incomes.income_date', '<=', $to))
-        ->when($accountCodeTypeId, fn($q) => $q->where('account_codes.account_code_type_id', $accountCodeTypeId))
+        ->when($projectId, fn($q2) => $q2->where('incomes.project_id', $projectId))
+        ->when($from, fn($q2) => $q2->whereDate('incomes.income_date', '>=', $from))
+        ->when($to, fn($q2) => $q2->whereDate('incomes.income_date', '<=', $to))
+        ->when($accountCodeId, fn($q2) => $q2->where('incomes.account_code_id', $accountCodeId))
+        ->when($q !== '', fn($q2) => $q2->where('incomes.description', 'like', "%{$q}%"))
         ->selectRaw("
             incomes.income_date as dt,
             account_codes.code as code,
             account_codes.name as name,
-            account_code_types.id   as type_id,
             COALESCE(account_code_types.name, 'Uncategorized') as type_name,
             incomes.description as description,
-            incomes.amount as debit,
             incomes.created_at as created_at,
+            incomes.amount as debit,
             0 as credit
         ");
 
@@ -104,7 +104,6 @@ class ReportController extends Controller
             'date'        => \Carbon\Carbon::parse($r->dt)->format('Y-m-d'),
             'code'        => $r->code ?? '—',
             'name'        => $r->name ?? '—',
-            'type_id'     => $r->type_id,
             'type_name'   => $r->type_name ?? 'Uncategorized',
             'description' => $r->description,
             'debit'       => $debit,
@@ -115,21 +114,20 @@ class ReportController extends Controller
 
     $finalBalance = $items->last()['balance'] ?? $openingBalance;
 
-    $projects = Project::orderBy('name')->get(['id','name']);
-
-    // For the type filter dropdown (if you want it in the view):
-    $accountCodeTypes = AccountCodeType::orderBy('name')->get(['id','name']);
+    $projects = \App\Models\Project::orderBy('name')->get(['id','name']);
+    $accountCodes = \App\Models\AccountCode::orderBy('code')->get(['id','code','name']); // for dropdown
 
     return view('reports.cashbook', [
         'items'             => $items,
         'projects'          => $projects,
+        'accountCodes'      => $accountCodes,        // NEW
         'openingBalance'    => $openingBalance,
         'totalDebit'        => $totalDebit,
         'totalCredit'       => $totalCredit,
         'finalBalance'      => $finalBalance,
-        'accountCodeTypes'  => $accountCodeTypes,     // NEW
-        'selectedTypeId'    => $accountCodeTypeId,    // NEW
         'selectedProjectId' => $projectId,
+        'selectedAccountId' => $accountCodeId,       // NEW
+        'q'                 => $q,                   // NEW
         'from'              => $from?->format('Y-m-d'),
         'to'                => $to?->format('Y-m-d'),
     ]);
