@@ -1,6 +1,6 @@
 <x-app-layout>
     <div class="max-w-5xl mx-auto p-4 sm:p-6" x-data="incomeModal()">
-        <h1 class="text-xl font-bold mb-3">Incomes</h1>
+        <h1 class="text-xl font-bold mb-3">Received</h1>
 
         {{-- Filters --}}
         <form method="GET" class="grid gap-3 sm:grid-cols-5 mb-4">
@@ -52,7 +52,7 @@
 
         {{-- Totals --}}
         <div class="mb-4">
-            <strong>Total Income:</strong> {{ number_format($totalIncome, 2) }}
+            <strong>Total Received:</strong> {{ number_format($totalIncome, 2) }}
         </div>
 
         {{-- Table --}}

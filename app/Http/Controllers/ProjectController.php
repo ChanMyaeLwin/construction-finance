@@ -36,7 +36,7 @@ class ProjectController extends Controller
             'project_type_id' => 'nullable|exists:project_types,id',
             'description' => 'nullable|string',
             'location' => 'nullable|string|max:255',
-            'fixed_amount' => 'required|numeric|min:0',
+            'accounts_receivable' => 'required|numeric|min:0',
             'start_date' => 'required|date',
             'expected_end_date' => 'nullable|date|after_or_equal:start_date',
             'progress_percent' => 'nullable|integer|min:0|max:100',
@@ -90,12 +90,11 @@ class ProjectController extends Controller
             'project_type_id' => 'nullable|exists:project_types,id',
             'description' => 'nullable|string',
             'location' => 'nullable|string|max:255',
-            'fixed_amount' => 'required|numeric|min:0',
+            'accounts_receivable' => 'required|numeric|min:0',
             'start_date' => 'required|date',
             'expected_end_date' => 'nullable|date|after_or_equal:start_date',
             'progress_percent' => 'nullable|integer|min:0|max:100',
         ]);
-
         $project->update($validated);
         return redirect()->route('projects.show', $project)->with('success', 'Project updated.');
     }

@@ -37,9 +37,9 @@
 
             <div class="grid grid-cols-2 gap-3">
                 <div>
-                    <label class="block text-sm font-medium">Fixed Amount</label>
-                    <input type="number" step="0.01" min="0" name="fixed_amount"
-                           value="{{ old('fixed_amount', $project->fixed_amount) }}" required
+                    <label class="block text-sm font-medium">A/C Receivable</label>
+                    <input type="number" step="0.01" min="0" name="accounts_receivable"
+                           value="{{ old('accounts_receivable', $project->accounts_receivable) }}" required
                            class="mt-1 w-full rounded-xl border-gray-300 focus:ring-indigo-500" />
                 </div>
                 <div>

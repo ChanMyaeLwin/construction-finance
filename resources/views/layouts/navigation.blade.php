@@ -27,7 +27,7 @@
                     </x-nav-link>
 
                     <x-nav-link href="{{ route('incomes.index') }}" :active="request()->routeIs('incomes.index')">
-                        Incomes
+                        Received
                     </x-nav-link>
 
                     <x-nav-link href="{{ route('expenses.index') }}" :active="request()->routeIs('expenses.index')">
@@ -75,7 +75,7 @@
                             class="absolute z-40 mt-2 w-44 rounded-xl border bg-white shadow">
                             <a href="{{ route('account-code-types.index') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">Account Code Types</a>
                             <a href="{{ route('account-codes.index') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">Account Codes</a>
-                            <a href="{{ route('project-types.index') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">Product Types</a>
+                            <a href="{{ route('project-types.index') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">Project Types</a>
                         </div>
                     </div>
                 </div>
@@ -135,7 +135,7 @@
             </x-responsive-nav-link>
 
             <x-responsive-nav-link href="{{ route('incomes.index') }}" :active="request()->routeIs('incomes.*')">
-                Incomes
+                Received
             </x-responsive-nav-link>
 
             <x-responsive-nav-link href="{{ route('expenses.index') }}" :active="request()->routeIs('expenses.index')">

@@ -19,8 +19,9 @@
             $totalIncome  = (float) ($project->incomes_sum_amount  ?? $project->incomes->sum('amount'));
 
             // Net = Income - Expense
-            $profit = (float) $totalIncome - $totalExpense;
-            $remaining = (float) $project->fixed_amount - $totalIncome;
+            $cash_balance = (float) $totalIncome - $totalExpense;
+            $remaining = (float) $project->accounts_receivable - $totalIncome;
+            $profit_loss = (float) $project->accounts_receivable - $totalExpense;
         @endphp
         <div class="rounded-2xl border p-4 bg-white">
             <div class="flex items-start justify-between gap-3">
@@ -32,23 +33,29 @@
                     </p>
                 </div>
                 <div class="text-right text-sm shrink-0">
-                    <div>Fixed:
-                        <span class="font-semibold">{{ number_format($project->fixed_amount,2) }}</span>
+                    <div>A/C Receivable:
+                        <span class="font-semibold">{{ number_format($project->accounts_receivable,2) }}</span>
                     </div>
-                    <div>Income:
+                    <div>Received:
                         <span class="font-semibold text-emerald-700">{{ number_format($totalIncome,2) }}</span>
                     </div>
-                    <div>Expense:
-                        <span class="font-semibold">{{ number_format($totalExpense,2) }}</span>
-                    </div>
-                    <div>Remaining:
+                      <div>A/C Receivable Balance:
                         <span class="font-semibold {{ $remaining >= 0 ? 'text-emerald-600' : 'text-red-600' }}">
                             {{ number_format($remaining,2) }}
                         </span>
                     </div>
+                    <div>Expense:
+                        <span class="font-semibold">{{ number_format($totalExpense,2) }}</span>
+                    </div>
+                     <div>Cash Balance:
+                        <span class="font-semibold {{ $cash_balance >= 0 ? 'text-emerald-600' : 'text-red-600' }}">
+                            {{ number_format($cash_balance,2) }}
+                        </span>
+                    </div>
+                  
                     <div>Profit/Loss:
-                        <span class="font-semibold {{ $profit >= 0 ? 'text-emerald-600' : 'text-red-600' }}">
-                            {{ number_format($profit,2) }}
+                        <span class="font-semibold {{ $profit_loss >= 0 ? 'text-emerald-600' : 'text-red-600' }}">
+                            {{ number_format($profit_loss,2) }}
                         </span>
                     </div>
                 </div>

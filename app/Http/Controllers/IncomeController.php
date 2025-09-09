@@ -52,13 +52,13 @@ class IncomeController extends Controller
 
         $income->update($data);
 
-        return back()->with('success', 'Income updated.');
+        return back()->with('success', 'Received updated.');
     }
 
     public function destroy(Income $income)
     {
         $income->delete();
 
-        return back()->with('success', 'Income deleted.');
+        return back()->with('success', 'Received deleted.');
     }
 }

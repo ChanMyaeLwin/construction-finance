@@ -20,10 +20,10 @@
                         <th class="py-2 px-3">Project</th>
                         <th class="px-3">Type</th>
                         <th class="px-3">Location</th>
-                        <th class="px-3 text-right">Fixed Amount</th>
-                        <th class="px-3 text-right">Income</th>   
+                        <th class="px-3 text-right">A/C Receivable</th>
+                        <th class="px-3 text-right">Received</th>   
                         <th class="px-3 text-right">Expense</th>    
-                        <th class="px-3 text-right">Remaining</th>   
+                        <th class="px-3 text-right">A/C Receivable Balance</th>   
                         <th class="px-3 text-right">Profit / Loss</th>
                         <th class="px-3 text-right">Complete %</th>
                         <th class="px-3 w-40 text-right">Actions</th>
@@ -32,11 +32,11 @@
                 <tbody>
                     @forelse($projects as $p)
                         @php
-                            $fixed_amount  = (float) ($p->fixed_amount  ?? 0);
+                            $accounts_receivable  = (float) ($p->accounts_receivable  ?? 0);
                             $income  = (float) ($p->incomes_sum_amount  ?? 0);
                             $expense = (float) ($p->expenses_sum_amount ?? 0);
                             $profit  = $income - $expense;
-                            $remaining  = $fixed_amount - $income;
+                            $remaining  = $accounts_receivable - $income;
                         @endphp
                         <tr class="border-t">
                             <td class="py-2 px-3">
@@ -51,7 +51,7 @@
                             <td class="px-3">{{ optional($p->projectType)->name ?? ($p->project_type ?? '—') }}</td>
                             <td class="px-3">{{ $p->location ?: '—' }}</td>
 
-                            <td class="px-3 text-right">{{ number_format($p->fixed_amount, 2) }}</td>
+                            <td class="px-3 text-right">{{ number_format($p->accounts_receivable, 2) }}</td>
                             <td class="px-3 text-right text-emerald-700">{{ number_format($income, 2) }}</td>
                             <td class="px-3 text-right">{{ number_format($expense, 2) }}</td>     
                             <td class="px-3 text-right">
@@ -93,11 +93,11 @@
         <div class="md:hidden space-y-3">
             @forelse($projects as $p)
                 @php
-                    $fixed_amount  = (float) ($p->fixed_amount  ?? 0);
+                    $accounts_receivable  = (float) ($p->accounts_receivable  ?? 0);
                     $income  = (float) ($p->incomes_sum_amount  ?? 0);
                     $expense = (float) ($p->expenses_sum_amount ?? 0);
                     $profit  = $income - $expense;
-                    $remaining = $fixed_amount - $income;
+                    $remaining = $accounts_receivable - $income;
                 @endphp
                 <div class="rounded-xl border bg-white p-3">
                     <div class="flex items-start justify-between gap-3">
@@ -110,8 +110,8 @@
                             </div>
                         </div>
                         <div class="text-right">
-                            <div class="text-xs text-gray-500">Fixed</div>
-                            <div class="font-semibold">{{ number_format($p->fixed_amount, 2) }}</div>
+                            <div class="text-xs text-gray-500">A/C Receivable</div>
+                            <div class="font-semibold">{{ number_format($p->accounts_receivable, 2) }}</div>
                         </div>
                     </div>
 

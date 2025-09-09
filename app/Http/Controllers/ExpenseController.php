@@ -63,7 +63,7 @@ class ExpenseController extends Controller
         if ((int)$ac->account_code_type_id === 12) {
             $data['income_date'] = $data['expense_date'];
             Income::create($data);
-            return back()->with('success', 'Income added.');
+            return back()->with('success', 'Received added.');
         }
 
         // If worker type (15) => require worker_id and copy name to description if blank
@@ -98,7 +98,7 @@ class ExpenseController extends Controller
         if ((int)$ac->account_code_type_id === 12) {
             $data['income_date'] = $data['expense_date'];
             Income::create($data);
-            return back()->with('success', 'Income added.');
+            return back()->with('success', 'Received added.');
         }
 
         if ((int)$ac->account_code_type_id === 15) {

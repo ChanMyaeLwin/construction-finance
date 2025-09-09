@@ -17,12 +17,13 @@ class ReportController extends Controller
     public function summary()
     {
         $totals = [
-            'fixed'   => (float) Project::sum('fixed_amount'),
+            'accounts_receivable'   => (float) Project::sum('accounts_receivable'),
             'expense' => (float) Project::withSum('expenses as expense_sum', 'amount')->get()->sum('expense_sum'),
             'income'  => (float) Project::withSum('incomes',  'amount')->get()->sum('incomes_sum_amount'),
         ];
         // CHANGE: profit = income - expense
-        $totals['profit'] = $totals['income'] - $totals['expense'];
+        $totals['cash_balance'] = $totals['income'] - $totals['expense'];
+        $totals['profit_loss'] = $totals['accounts_receivable'] - $totals['expense'];
 
         $projects = Project::query()
             ->withSum('expenses as total_expense', 'amount')

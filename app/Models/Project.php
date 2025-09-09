@@ -8,11 +8,11 @@ class Project extends Model
 {
     protected $fillable = [
         'name', 'project_type_id', 'description', 'location',
-        'fixed_amount', 'start_date', 'expected_end_date'
+        'accounts_receivable', 'start_date', 'expected_end_date'
     ];
 
     protected $casts = [
-        'fixed_amount'        => 'decimal:2',
+        'accounts_receivable' => 'decimal:2',
         'start_date'          => 'date',
         'expected_end_date'   => 'date',
         'progress_percent'    => 'integer',
@@ -94,10 +94,10 @@ class Project extends Model
      */
     public function getBudgetUsedPercentAttribute(): int
     {
-        $fixed = (float) $this->fixed_amount;
-        if ($fixed <= 0) return 0;
+        $accounts_receivable = (float) $this->accounts_receivable;
+        if ($accounts_receivable <= 0) return 0;
 
-        $pct = ($this->total_expense / $fixed) * 100;
+        $pct = ($this->total_expense / $accounts_receivable) * 100;
         return (int) min(100, max(0, round($pct)));
     }
 
